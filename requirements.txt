@@ -1,0 +1,19 @@
+ollama>=0.4.0
+linkup-sdk>=0.2.0
+requests>=2.31.0
+faiss-cpu>=1.7.4
+sentence-transformers>=2.2.0
+PyMuPDF>=1.23.0
+python-docx>=1.0.0
+icalendar>=5.0.0
+pyyaml>=6.0
+rich>=13.0.0
+prompt_toolkit>=3.0.0
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Privacy (optional — falls back to regex if not installed)
+presidio-analyzer>=2.2.0
+presidio-anonymizer>=2.2.0
+spacy>=3.7.0
+# After install, also run: python -m spacy download en_core_web_sm

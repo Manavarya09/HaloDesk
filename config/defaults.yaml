@@ -1,0 +1,38 @@
+agent:
+  model: "llama3.1:8b"            # Ollama model (this IS the instruct variant, with 128K context + tool calling)
+  max_retries: 2                 # Evaluator retry limit per step
+  max_plan_steps: 10             # Max steps in a plan
+  conversation_buffer_size: 20   # Short-term memory turns
+
+linkup:
+  base_url: "https://api.linkup.so/v1/search"
+  default_depth: "deep"          # "standard" or "deep"
+  default_output_type: "searchResults"  # "searchResults", "sourcedAnswer", "structured"
+  rate_limit_per_second: 10
+
+memory:
+  sqlite_path: "data/agent.db"
+  faiss_index_path: "data/faiss.index"
+  embedding_model: "all-MiniLM-L6-v2"  # sentence-transformers model
+  embedding_dim: 384
+
+email:
+  provider: "imap"               # "imap" or "mbox"
+  imap_host: ""
+  imap_port: 993
+  imap_user: ""
+  # password via env var AGENT_EMAIL_PASSWORD
+
+calendar:
+  provider: "local"              # "local" (.ics files)
+  ics_directory: "data/calendars"
+
+documents:
+  search_directory: "data/documents"
+  supported_extensions:
+    - ".pdf"
+    - ".docx"
+    - ".txt"
+    - ".md"
+    - ".png"
+    - ".jpg"

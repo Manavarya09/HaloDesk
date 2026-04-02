@@ -1,0 +1,20 @@
+# Runtime data (auto-generated on first run)
+data/drafts/
+data/uploads/
+data/agent.db
+data/faiss.index
+data/faiss.index.meta.json
+data/calendars/.demo_seeded
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HaloDesk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #fffaf4;
+  --paper-soft: #fff4e8;
+  --panel: #f7ecdf;
+  --panel-strong: #f2e3d2;
+  --orange: #f28b1d;
+  --orange-strong: #d96f00;
+  --orange-soft: #ffd9b2;
+  --ink: #111111;
+  --ink-soft: rgba(17, 17, 17, 0.68);
+  --ink-faint: rgba(17, 17, 17, 0.42);
+  --line: rgba(17, 17, 17, 0.08);
+  --shadow-outer: 16px 16px 32px rgba(205, 176, 142, 0.45);
+  --shadow-inner: inset 8px 8px 18px rgba(227, 203, 175, 0.65), inset -8px -8px 18px rgba(255, 255, 255, 0.96);
+  --shadow-soft: 10px 10px 24px rgba(205, 176, 142, 0.28), -10px -10px 24px rgba(255, 255, 255, 0.9);
+  --shadow-pressed: inset 6px 6px 12px rgba(207, 182, 153, 0.5), inset -6px -6px 12px rgba(255, 255, 255, 0.9);
+  --radius-xl: 30px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --font-display: "Sora", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --transition: 180ms ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(242, 139, 29, 0.18), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(242, 139, 29, 0.12), transparent 30%),
+    linear-gradient(145deg, var(--paper) 0%, var(--paper-soft) 100%);
+  color: var(--ink);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+button,
+textarea,
+input {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(242, 139, 29, 0.3);
+  border-radius: 999px;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 320px;
+  gap: 18px;
+  height: 100vh;
+  padding: 18px;
+}
+
+.shell {
+  background: linear-gradient(145deg, var(--panel), var(--paper-soft));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.sidebar,
+.right-panel,
+.chat-shell {
+  min-height: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 260ms ease, opacity 260ms ease, padding 260ms ease;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  opacity: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  min-width: 280px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.chat-shell {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.menu-btn,
+.toggle-track,
+.ghost-btn,
+.send-btn,
+.attach-btn,
+.panel-tab,
+.suggestion,
+.quick-action,
+.gen-file-btn,
+.remove-file {
+  border: 0;
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-soft);
+}
+
+.menu-btn,
+.ghost-btn,
+.attach-btn,
+.send-btn {
+  border-radius: 999px;
+  color: var(--ink);
+}
+
+.menu-btn,
+.ghost-btn {
+  padding: 11px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), color var(--transition);
+}
+
+.menu-btn:hover,
+.ghost-btn:hover,
+.attach-btn:hover,
+.send-btn:hover,
+.panel-tab:hover,
+.suggestion:hover,
+.quick-action:hover,
+.gen-file-btn:hover {
+  transform: translateY(-1px);
+}
+
+.menu-btn:active,
+.ghost-btn:active,
+.attach-btn:active,
+.send-btn:active,
+.panel-tab:active,
+.quick-action:active,
+.suggestion:active,
+.gen-file-btn:active {
+  box-shadow: var(--shadow-pressed);
+  transform: translateY(0);
+}
+
+.brand-mark {
+  min-width: 58px;
+  height: 58px;
+  padding: 0 16px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #ffd6aa, #fff7ef);
+  box-shadow: var(--shadow-soft);
+  color: var(--orange-strong);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.brand-copy h1,
+.setup-copy h2,
+.welcome h2 {
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.brand-copy h1 {
+  font-size: 24px;
+  letter-spacing: -0.04em;
+}
+
+.brand-copy p,
+.setup-copy p,
+.welcome p,
+.section-note,
+.task-goal,
+.memory-item,
+.ai-view-redacted,
+.ai-view-original,
+.msg-bubble,
+.tool-name,
+.quick-action,
+.suggestion,
+.input-hint,
+.empty-state {
+  color: var(--ink-soft);
+}
+
+.brand-copy p {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.privacy-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-soft);
+}
+
+.privacy-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.privacy-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.privacy-engine {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.toggle-track {
+  width: 58px;
+  height: 34px;
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.toggle-track::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffffff, #ffe2bf);
+  box-shadow: var(--shadow-soft);
+  transition: transform var(--transition);
+}
+
+.toggle-track.on {
+  background: linear-gradient(145deg, #ffd6aa, #fff8f0);
+}
+
+.toggle-track.on::before {
+  transform: translateX(24px);
+  background: linear-gradient(145deg, #f28b1d, #ffb459);
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 6px rgba(242, 139, 29, 0.12);
+}
+
+.status-dot.offline {
+  background: var(--ink);
+  box-shadow: 0 0 0 6px rgba(17, 17, 17, 0.08);
+}
+
+.section {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.44), rgba(255, 244, 232, 0.95));
+  box-shadow: var(--shadow-soft);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.section-note {
+  font-size: 11px;
+}
+
+.tool-list,
+.quick-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.tool-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-soft);
+}
+
+.tool-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tool-kind {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orange-strong);
+}
+
+.quick-action {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.quick-action strong,
+.suggestion strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.welcome {
+  margin: auto;
+  max-width: 760px;
+  text-align: center;
+}
+
+.welcome-eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #ffe4c4, #fff9f2);
+  box-shadow: var(--shadow-soft);
+  color: var(--orange-strong);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.welcome h2 {
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.06em;
+}
+
+.welcome p {
+  max-width: 620px;
+  margin: 14px auto 24px;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.welcome-suggestions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.suggestion {
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  text-align: left;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.message {
+  display: flex;
+  gap: 12px;
+  max-width: 84%;
+}
+
+.message.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.message.agent {
+  align-self: flex-start;
+}
+
+.message.system {
+  align-self: center;
+  max-width: 72%;
+}
+
+.msg-avatar {
+  min-width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-soft);
+  color: var(--orange-strong);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.message.user .msg-avatar {
+  color: var(--ink);
+}
+
+.msg-content {
+  min-width: 0;
+}
+
+.msg-bubble {
+  padding: 18px 20px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(247, 236, 223, 0.95));
+  box-shadow: var(--shadow-soft);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.7;
+}
+
+.message.user .msg-bubble {
+  background: linear-gradient(145deg, #ffd8b0, #fff5ea);
+  color: var(--ink);
+}
+
+.message.system .msg-bubble {
+  text-align: center;
+  font-size: 13px;
+}
+
+.msg-bubble code,
+.msg-bubble pre {
+  font-family: "SFMono-Regular", "Menlo", monospace;
+}
+
+.msg-bubble code {
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(17, 17, 17, 0.06);
+}
+
+.msg-bubble pre {
+  margin: 8px 0 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+  overflow-x: auto;
+}
+
+.msg-time {
+  margin-top: 6px;
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.message.user .msg-time {
+  text-align: right;
+}
+
+.msg-attachments,
+.generated-files-list,
+.attachment-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.msg-attachments {
+  margin-top: 12px;
+}
+
+.msg-attachment,
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(247, 236, 223, 1));
+  box-shadow: var(--shadow-soft);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.attachment-bar {
+  margin-bottom: 12px;
+}
+
+.attachment-bar:empty {
+  display: none;
+}
+
+.remove-file {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--orange-strong);
+  font-weight: 800;
+}
+
+.generated-files {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow-inner);
+}
+
+.generated-files-label {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gen-file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(247, 236, 223, 0.95));
+  box-shadow: var(--shadow-soft);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.thinking-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.thinking-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes pulse {
+  0%, 80%, 100% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.input-area {
+  padding: 0 24px 24px;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 28px;
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-soft);
+}
+
+.attach-btn,
+.send-btn {
+  min-width: 90px;
+  height: 48px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.send-btn {
+  background: linear-gradient(145deg, #f28b1d, #ffb459);
+}
+
+.send-btn:disabled {
+  cursor: not-allowed;
+  color: rgba(17, 17, 17, 0.35);
+  background: linear-gradient(145deg, var(--panel-strong), var(--panel));
+  box-shadow: var(--shadow-inner);
+  transform: none;
+}
+
+.attach-btn {
+  min-width: 98px;
+}
+
+.input-wrapper textarea {
+  flex: 1;
+  min-height: 52px;
+  max-height: 150px;
+  padding: 14px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  resize: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.input-wrapper textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+.input-hint {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 8px 0;
+  font-size: 12px;
+}
+
+.input-hint kbd {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#fileInput {
+  display: none;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 18px 18px 0;
+}
+
+.panel-tab {
+  min-height: 46px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: transform var(--transition), box-shadow var(--transition), color var(--transition);
+}
+
+.panel-tab.active {
+  color: var(--orange-strong);
+  box-shadow: var(--shadow-pressed);
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.panel-content.hidden {
+  display: none;
+}
+
+.task-item,
+.memory-item,
+.ai-view-item,
+.setup-check {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.56), rgba(247, 236, 223, 1));
+  box-shadow: var(--shadow-soft);
+}
+
+.task-item,
+.memory-item,
+.ai-view-item {
+  margin-bottom: 10px;
+}
+
+.task-status,
+.badge,
+.check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #ffd6aa, #fff7ef);
+  color: var(--orange-strong);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.task-goal {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.memory-source,
+.ai-view-label,
+.setup-check .check-msg,
+.setup-status {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.empty-state {
+  padding: 28px 14px;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.ai-view-original,
+.ai-view-redacted {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.placeholder {
+  color: var(--orange-strong);
+  font-weight: 800;
+}
+
+.drag-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  padding: 32px;
+  background: rgba(255, 250, 244, 0.86);
+  backdrop-filter: blur(8px);
+}
+
+.drag-overlay.active {
+  display: flex;
+}
+
+.drag-box {
+  margin: auto;
+  width: min(520px, 100%);
+  padding: 44px;
+  border-radius: 36px;
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+}
+
+.drag-box strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 24px;
+  font-family: var(--font-display);
+}
+
+.setup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(242, 139, 29, 0.16), transparent 30%),
+    linear-gradient(145deg, var(--paper) 0%, var(--paper-soft) 100%);
+  transition: opacity 320ms ease;
+}
+
+.setup-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.setup-box {
+  width: min(620px, 100%);
+  padding: 34px;
+  border-radius: 40px;
+  background: linear-gradient(145deg, var(--panel), var(--paper));
+  box-shadow: var(--shadow-outer);
+}
+
+.setup-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.setup-mark {
+  min-width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #ffd6aa, #fff7ef);
+  box-shadow: var(--shadow-soft);
+  color: var(--orange-strong);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.setup-copy h2 {
+  font-size: 28px;
+  letter-spacing: -0.05em;
+}
+
+.setup-copy p {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+
+.setup-checks {
+  display: grid;
+  gap: 10px;
+}
+
+.setup-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.setup-check .check-label {
+  min-width: 110px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.setup-check.checking .check-icon {
+  color: var(--ink-soft);
+}
+
+.setup-check.warn .check-icon {
+  color: var(--orange-strong);
+}
+
+.setup-check.fail .check-icon {
+  color: var(--ink);
+}
+
+.setup-footer {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.setup-btn {
+  min-width: 150px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #f28b1d, #ffb459);
+  box-shadow: var(--shadow-soft);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.setup-btn:disabled {
+  cursor: not-allowed;
+  background: linear-gradient(145deg, var(--panel-strong), var(--panel));
+  box-shadow: var(--shadow-inner);
+  color: rgba(17, 17, 17, 0.34);
+}
+
+@media (max-width: 1180px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: 920px) {
+  body {
+    overflow: auto;
+  }
+
+  .app {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .right-panel {
+    display: none;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-right {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .welcome-suggestions {
+    grid-template-columns: 1fr;
+  }
+
+  .input-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .attach-btn,
+  .send-btn {
+    width: 100%;
+  }
+
+  .setup-head,
+  .setup-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+</style>
+</head>
+<body>
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-box">
+    <div class="setup-head">
+      <div class="setup-mark">HD</div>
+      <div class="setup-copy">
+        <h2>HaloDesk</h2>
+        <p>Preparing the local workspace and checking service readiness.</p>
+      </div>
+    </div>
+    <div class="setup-checks" id="setupChecks">
+      <div class="setup-check checking" id="chk-python"><span class="check-icon">Run</span><span class="check-label">Python</span><span class="check-msg">Checking runtime availability.</span></div>
+      <div class="setup-check checking" id="chk-ollama"><span class="check-icon">Run</span><span class="check-label">Ollama</span><span class="check-msg">Checking model service.</span></div>
+      <div class="setup-check checking" id="chk-linkup"><span class="check-icon">Run</span><span class="check-label">Linkup</span><span class="check-msg">Checking API key.</span></div>
+      <div class="setup-check checking" id="chk-packages"><span class="check-icon">Run</span><span class="check-label">Packages</span><span class="check-msg">Checking required modules.</span></div>
+      <div class="setup-check checking" id="chk-privacy"><span class="check-icon">Run</span><span class="check-label">Privacy</span><span class="check-msg">Checking redaction engine.</span></div>
+      <div class="setup-check checking" id="chk-demo"><span class="check-icon">Run</span><span class="check-label">Demo Data</span><span class="check-msg">Checking seed files.</span></div>
+    </div>
+    <div class="setup-footer">
+      <div class="setup-status" id="setupStatus">Waiting for results.</div>
+      <button class="setup-btn" id="setupBtn" disabled onclick="dismissSetup()">Loading</button>
+    </div>
+  </div>
+</div>
+
+<div class="drag-overlay" id="dragOverlay">
+  <div class="drag-box">
+    <strong>Attach files</strong>
+    <div>Drop documents here and HaloDesk will include them in the next request.</div>
+  </div>
+</div>
+
+<div class="app" id="app" style="display:none">
+  <aside class="sidebar shell collapsed" id="sidebar">
+    <div class="sidebar-inner">
+      <section class="section">
+        <div class="section-head">
+          <h3 class="section-title">Capabilities</h3>
+          <span class="section-note">12 tools</span>
+        </div>
+        <div class="tool-list">
+          <div class="tool-item"><span class="tool-name">Web research</span><span class="tool-kind">Live</span></div>
+          <div class="tool-item"><span class="tool-name">Email inbox</span><span class="tool-kind">Mail</span></div>
+          <div class="tool-item"><span class="tool-name">Email drafting</span><span class="tool-kind">Mail</span></div>
+          <div class="tool-item"><span class="tool-name">Document reading</span><span class="tool-kind">Docs</span></div>
+          <div class="tool-item"><span class="tool-name">Document summaries</span><span class="tool-kind">Docs</span></div>
+          <div class="tool-item"><span class="tool-name">Calendar lookup</span><span class="tool-kind">Time</span></div>
+          <div class="tool-item"><span class="tool-name">Event creation</span><span class="tool-kind">Time</span></div>
+          <div class="tool-item"><span class="tool-name">Reminder creation</span><span class="tool-kind">Time</span></div>
+          <div class="tool-item"><span class="tool-name">Long-term memory</span><span class="tool-kind">Memory</span></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h3 class="section-title">Start Fast</h3>
+          <span class="section-note">Text only</span>
+        </div>
+        <div class="quick-actions">
+          <button class="quick-action" onclick="sendQuick('List my recent emails')"><strong>Inbox sweep</strong>Show recent email activity and surface anything important.</button>
+          <button class="quick-action" onclick="sendQuick('List my upcoming calendar events')"><strong>Today view</strong>Check the next meetings and open time blocks.</button>
+          <button class="quick-action" onclick="sendQuick('List available documents')"><strong>File review</strong>See what documents are available to inspect.</button>
+          <button class="quick-action" onclick="sendQuick('What do you remember about our previous interactions?')"><strong>Memory check</strong>Recall saved context from earlier work.</button>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <main class="chat-shell shell">
+    <header class="topbar">
+      <div class="brand-wrap">
+        <button class="menu-btn" id="sidebarToggle" onclick="toggleSidebar()">Show Panel</button>
+        <div class="brand-mark">HD</div>
+        <div class="brand-copy">
+          <h1>HaloDesk</h1>
+          <p>Private desktop coordination for research, email, files, and scheduling.</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="privacy-toggle">
+          <div class="privacy-copy">
+            <span class="privacy-label" id="privacyLabel">Privacy On</span>
+            <span class="privacy-engine" id="privacyEngine">Engine unavailable</span>
+          </div>
+          <button class="toggle-track on" id="privacyTrack" onclick="togglePrivacy()" aria-label="Toggle privacy mode"></button>
+        </div>
+        <div class="status-badge">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">connecting</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="chat-main">
+      <div class="messages" id="messages">
+        <section class="welcome" id="welcome">
+          <span class="welcome-eyebrow">Local-first assistant</span>
+          <h2>Work faster with a softer interface.</h2>
+          <p>HaloDesk keeps the experience calm and bright while handling research, inbox work, document reading, and scheduling. Sensitive details are redacted before the model sees them when privacy mode is on.</p>
+          <div class="welcome-suggestions">
+            <button class="suggestion" onclick="sendQuick('Draft a reply to the investor email from Acme Corp')"><strong>Draft a reply</strong>Prepare a response for the investor thread from Acme Corp.</button>
+            <button class="suggestion" onclick="sendQuick('Research the latest AI funding news')"><strong>Run research</strong>Pull the latest AI funding updates through web research.</button>
+            <button class="suggestion" onclick="sendQuick('Create a meeting for tomorrow at 2pm called Project Sync')"><strong>Schedule time</strong>Create a meeting for tomorrow at 2pm named Project Sync.</button>
+            <button class="suggestion" onclick="sendQuick('Summarize the documents in my folder')"><strong>Summarize files</strong>Review the current document set and return concise notes.</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="input-area">
+        <div class="attachment-bar" id="attachmentBar"></div>
+        <div class="input-wrapper">
+          <button class="attach-btn" onclick="document.getElementById('fileInput').click()">Attach</button>
+          <textarea id="userInput" placeholder="Ask HaloDesk anything or attach files for context." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+        </div>
+        <input type="file" id="fileInput" multiple accept=".pdf,.docx,.doc,.txt,.md,.png,.jpg,.jpeg,.csv,.xlsx,.eml" onchange="handleFileSelect(this)">
+        <div class="input-hint">
+          <span><kbd>Enter</kbd> send <kbd>Shift+Enter</kbd> newline</span>
+          <span id="charCount"></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="right-panel shell">
+    <div class="panel-tabs">
+      <button class="panel-tab active" onclick="switchTab('tasks', this)">Tasks</button>
+      <button class="panel-tab" onclick="switchTab('aiview', this)">AI View</button>
+      <button class="panel-tab" onclick="switchTab('memory', this)">Memory</button>
+    </div>
+    <div class="panel-content" id="tasksPanel">
+      <div class="empty-state" id="tasksEmpty">No tasks yet. Completed and running steps will appear here after the first request.</div>
+      <div id="tasksList"></div>
+    </div>
+    <div class="panel-content hidden" id="aiviewPanel">
+      <div class="empty-state" id="aiviewEmpty">Send a message to inspect what the model receives after privacy redaction.</div>
+      <div id="aiviewList"></div>
+    </div>
+    <div class="panel-content hidden" id="memoryPanel">
+      <div class="empty-state" id="memoryEmpty">No memories stored yet. Saved context will show up here.</div>
+      <div id="memoryList"></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const API = window.location.origin;
+let isProcessing = false;
+let hasMessages = false;
+let privacyEnabled = true;
+let pendingFiles = [];
+let aiViewLog = [];
+
+const input = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+const messagesEl = document.getElementById("messages");
+const welcomeEl = document.getElementById("welcome");
+const attachmentBar = document.getElementById("attachmentBar");
+
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const btn = document.getElementById("sidebarToggle");
+  const collapsed = sidebar.classList.toggle("collapsed");
+  btn.textContent = collapsed ? "Show Panel" : "Hide Panel";
+}
+
+async function init() {
+  const statusLabels = { ok: "OK", warning: "Warn", error: "Issue" };
+
+  function setCheck(id, status, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = "setup-check " + (status === "ok" ? "ok" : status === "warning" ? "warn" : "fail");
+    el.querySelector(".check-icon").textContent = statusLabels[status] || "Issue";
+    el.querySelector(".check-msg").textContent = msg;
+  }
+
+  function setAllFailed(msg) {
+    ["chk-python", "chk-ollama", "chk-linkup", "chk-packages", "chk-privacy", "chk-demo"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains("checking")) setCheck(id, "error", msg);
+    });
+  }
+
+  try {
+    const res = await fetch(API + "/api/health");
+    if (!res.ok) throw new Error("Health endpoint returned " + res.status);
+    const data = await res.json();
+    const checks = data.checks;
+
+    if (checks.python) setCheck("chk-python", checks.python.status, checks.python.message);
+    if (checks.ollama) setCheck("chk-ollama", checks.ollama.status, checks.ollama.message);
+    if (checks.linkup_api_key) setCheck("chk-linkup", checks.linkup_api_key.status, checks.linkup_api_key.message);
+    if (checks.packages) setCheck("chk-packages", checks.packages.status, checks.packages.message);
+    if (checks.privacy_engine) setCheck("chk-privacy", checks.privacy_engine.status, checks.privacy_engine.message);
+    if (checks.demo_data) setCheck("chk-demo", checks.demo_data.status, checks.demo_data.message);
+
+    const btn = document.getElementById("setupBtn");
+    const statusEl = document.getElementById("setupStatus");
+
+    if (data.healthy) {
+      statusEl.textContent = "Workspace ready.";
+      btn.textContent = "Launch";
+      btn.disabled = false;
+    } else {
+      statusEl.textContent = "Some checks need review, but the app can still start.";
+      btn.textContent = "Launch";
+      btn.disabled = false;
+    }
+
+    try {
+      const sessionRes = await fetch(API + "/api/session");
+      if (sessionRes.ok) {
+        const sessionData = await sessionRes.json();
+        document.getElementById("statusDot").classList.remove("offline");
+        document.getElementById("statusText").textContent = "online";
+        privacyEnabled = sessionData.privacy_enabled !== false;
+        updatePrivacyUI();
+        updateSendState();
+        fetchPrivacyEngine();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  } catch (error) {
+    setAllFailed("Server unreachable. Run python server.py and retry.");
+    const btn = document.getElementById("setupBtn");
+    const statusEl = document.getElementById("setupStatus");
+    statusEl.textContent = "Cannot reach the local server.";
+    btn.textContent = "Retry";
+    btn.disabled = false;
+    btn.onclick = () => location.reload();
+    document.getElementById("statusDot").classList.add("offline");
+    document.getElementById("statusText").textContent = "offline";
+    sendBtn.disabled = true;
+  }
+}
+
+function dismissSetup() {
+  const overlay = document.getElementById("setupOverlay");
+  overlay.classList.add("hidden");
+  document.getElementById("app").style.display = "";
+  setTimeout(() => overlay.remove(), 320);
+}
+
+async function fetchPrivacyEngine() {
+  try {
+    const response = await fetch(API + "/api/privacy");
+    const data = await response.json();
+    document.getElementById("privacyEngine").textContent = data.engine === "presidio" ? "NLP redaction" : "Regex redaction";
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function togglePrivacy() {
+  privacyEnabled = !privacyEnabled;
+  updatePrivacyUI();
+  fetch(API + "/api/privacy", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled: privacyEnabled })
+  }).catch((error) => console.error(error));
+}
+
+function updatePrivacyUI() {
+  const track = document.getElementById("privacyTrack");
+  const label = document.getElementById("privacyLabel");
+  if (privacyEnabled) {
+    track.classList.add("on");
+    label.textContent = "Privacy On";
+  } else {
+    track.classList.remove("on");
+    label.textContent = "Privacy Off";
+  }
+}
+
+function handleFileSelect(el) {
+  for (const file of el.files) addPendingFile(file);
+  el.value = "";
+}
+
+function addPendingFile(file) {
+  pendingFiles.push(file);
+  renderAttachmentBar();
+}
+
+function removePendingFile(index) {
+  pendingFiles.splice(index, 1);
+  renderAttachmentBar();
+}
+
+function renderAttachmentBar() {
+  attachmentBar.innerHTML = pendingFiles.map((file, index) => {
+    const kb = (file.size / 1024).toFixed(1);
+    return `<div class="attachment-chip">${esc(file.name)} <span>(${kb}KB)</span><span class="remove-file" onclick="removePendingFile(${index})">x</span></div>`;
+  }).join("");
+  updateSendState();
+}
+
+let dragCounter = 0;
+document.addEventListener("dragenter", (event) => {
+  event.preventDefault();
+  dragCounter += 1;
+  document.getElementById("dragOverlay").classList.add("active");
+});
+
+document.addEventListener("dragleave", (event) => {
+  event.preventDefault();
+  dragCounter -= 1;
+  if (dragCounter <= 0) {
+    dragCounter = 0;
+    document.getElementById("dragOverlay").classList.remove("active");
+  }
+});
+
+document.addEventListener("dragover", (event) => event.preventDefault());
+
+document.addEventListener("drop", (event) => {
+  event.preventDefault();
+  dragCounter = 0;
+  document.getElementById("dragOverlay").classList.remove("active");
+  for (const file of event.dataTransfer.files) addPendingFile(file);
+});
+
+function addMsg(role, text, extras = {}) {
+  if (!hasMessages) {
+    welcomeEl.style.display = "none";
+    hasMessages = true;
+  }
+
+  const now = new Date();
+  const ts = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const wrapper = document.createElement("div");
+  wrapper.className = `message ${role}`;
+
+  const avatar = document.createElement("div");
+  avatar.className = "msg-avatar";
+  avatar.textContent = role === "user" ? "You" : role === "agent" ? "HD" : "Note";
+
+  const content = document.createElement("div");
+  content.className = "msg-content";
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.textContent = text;
+
+  if (extras.attachments && extras.attachments.length) {
+    const attachments = document.createElement("div");
+    attachments.className = "msg-attachments";
+    extras.attachments.forEach((name) => {
+      const chip = document.createElement("span");
+      chip.className = "msg-attachment";
+      chip.textContent = name;
+      attachments.appendChild(chip);
+    });
+    bubble.appendChild(attachments);
+  }
+
+  if (extras.generated_files && extras.generated_files.length) {
+    const generated = document.createElement("div");
+    generated.className = "generated-files";
+    generated.innerHTML = '<div class="generated-files-label">Generated files</div>';
+    const list = document.createElement("div");
+    list.className = "generated-files-list";
+
+    extras.generated_files.forEach((file) => {
+      if (file.type === "mailto") {
+        const mailto = document.createElement("a");
+        mailto.className = "gen-file-btn";
+        const mailBody = (file.body || "").replace(/\n/g, "\r\n");
+        mailto.href = "mailto:" + encodeURIComponent(file.to || "")
+          + "?subject=" + encodeURIComponent(file.subject || "")
+          + "&body=" + encodeURIComponent(mailBody);
+        mailto.textContent = "Open draft";
+        mailto.title = "Open draft in default mail app";
+        list.appendChild(mailto);
+
+        const download = document.createElement("a");
+        download.className = "gen-file-btn";
+        download.href = API + "/api/download?path=" + encodeURIComponent(file.path);
+        download.target = "_blank";
+        download.textContent = "Download .eml";
+        download.title = "Download draft as EML";
+        list.appendChild(download);
+      } else {
+        const download = document.createElement("a");
+        download.className = "gen-file-btn";
+        download.href = API + "/api/download?path=" + encodeURIComponent(file.path);
+        download.target = "_blank";
+        download.textContent = file.type === "ics" ? `${file.label} .ics` : file.label;
+        list.appendChild(download);
+      }
+    });
+
+    generated.appendChild(list);
+    bubble.appendChild(generated);
+  }
+
+  const time = document.createElement("div");
+  time.className = "msg-time";
+  time.textContent = ts;
+
+  content.appendChild(bubble);
+  content.appendChild(time);
+
+  if (role === "system") {
+    wrapper.appendChild(content);
+  } else {
+    wrapper.appendChild(avatar);
+    wrapper.appendChild(content);
+  }
+
+  messagesEl.appendChild(wrapper);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addThinking() {
+  const el = document.createElement("div");
+  el.className = "thinking";
+  el.id = "thinking";
+  el.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div><span>HaloDesk is working</span>';
+  messagesEl.appendChild(el);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function removeThinking() {
+  const el = document.getElementById("thinking");
+  if (el) el.remove();
+}
+
+function addAiView(original, redacted) {
+  const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  aiViewLog.unshift({ original, redacted, time });
+  renderAiView();
+}
+
+function renderAiView() {
+  const list = document.getElementById("aiviewList");
+  const empty = document.getElementById("aiviewEmpty");
+  if (aiViewLog.length === 0) return;
+  empty.style.display = "none";
+  list.innerHTML = aiViewLog.map((item) => {
+    const hasRedaction = item.original !== item.redacted;
+    const badge = hasRedaction
+      ? '<span class="badge">Redacted</span>'
+      : '<span class="badge">Clean</span>';
+    const highlighted = esc(item.redacted).replace(/&lt;(\w+_\d+)&gt;/g, '<span class="placeholder">&lt;$1&gt;</span>');
+    return `<div class="ai-view-item">
+      <div class="ai-view-label">${item.time} ${badge}</div>
+      ${hasRedaction ? `<div class="ai-view-original">Typed: ${esc(item.original)}</div>` : ""}
+      <div class="ai-view-redacted">Model received: ${highlighted}</div>
+    </div>`;
+  }).join("");
+}
+
+async function sendMessage() {
+  const text = input.value.trim();
+  if ((!text && pendingFiles.length === 0) || isProcessing) return;
+
+  const fileNames = pendingFiles.map((file) => file.name);
+  const savedText = text;
+  const savedFiles = [...pendingFiles];
+
+  input.value = "";
+  input.style.height = "auto";
+  pendingFiles = [];
+  renderAttachmentBar();
+  document.getElementById("charCount").textContent = "";
+
+  addMsg("user", savedText || "Attached files", { attachments: fileNames.length ? fileNames : undefined });
+  isProcessing = true;
+  sendBtn.disabled = true;
+  addThinking();
+
+  try {
+    let res;
+    if (savedFiles.length > 0) {
+      const form = new FormData();
+      form.append("message", savedText || "Please analyze the attached files.");
+      form.append("privacy", privacyEnabled);
+      savedFiles.forEach((file) => form.append("files", file));
+      res = await fetch(API + "/api/chat", { method: "POST", body: form });
+    } else {
+      res = await fetch(API + "/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: savedText, privacy: privacyEnabled })
+      });
+    }
+
+    removeThinking();
+
+    if (!res.ok) {
+      const error = await res.json();
+      addMsg("system", "Error: " + (error.error || "Unknown error"));
+    } else {
+      const data = await res.json();
+      addMsg("agent", data.response, { generated_files: data.generated_files || [] });
+      if (data.ai_view) addAiView(savedText, data.ai_view);
+    }
+  } catch (error) {
+    removeThinking();
+    addMsg("system", "Connection error: " + error.message + ". Start server.py and try again.");
+  }
+
+  isProcessing = false;
+  updateSendState();
+  input.focus();
+  refreshTasks();
+  refreshMemory();
+}
+
+function sendQuick(text) {
+  input.value = text;
+  updateSendState();
+  sendMessage();
+}
+
+function handleKey(event) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 150) + "px";
+}
+
+function updateSendState() {
+  sendBtn.disabled = (input.value.trim().length === 0 && pendingFiles.length === 0) || isProcessing;
+}
+
+input.addEventListener("input", () => {
+  updateSendState();
+  document.getElementById("charCount").textContent = input.value.length > 0 ? input.value.length + " chars" : "";
+});
+
+function switchTab(tab, btn) {
+  document.querySelectorAll(".panel-tab").forEach((t) => t.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("tasksPanel").classList.toggle("hidden", tab !== "tasks");
+  document.getElementById("aiviewPanel").classList.toggle("hidden", tab !== "aiview");
+  document.getElementById("memoryPanel").classList.toggle("hidden", tab !== "memory");
+}
+
+async function refreshTasks() {
+  try {
+    const response = await fetch(API + "/api/tasks");
+    if (!response.ok) return;
+    const data = await response.json();
+    const list = document.getElementById("tasksList");
+    const empty = document.getElementById("tasksEmpty");
+    if (data.tasks && data.tasks.length) {
+      empty.style.display = "none";
+      list.innerHTML = data.tasks.map((task) => `<div class="task-item"><span class="task-status ${task.status}">${task.status}</span><div class="task-goal">${esc(task.goal)}</div></div>`).join("");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function refreshMemory() {
+  try {
+    const response = await fetch(API + "/api/memory?q=recent");
+    if (!response.ok) return;
+    const data = await response.json();
+    const list = document.getElementById("memoryList");
+    const empty = document.getElementById("memoryEmpty");
+    if (data.memories && data.memories.length) {
+      empty.style.display = "none";
+      list.innerHTML = data.memories.map((memory) => `<div class="memory-item">${esc(memory.text || "")}<div class="memory-source">source: ${esc(memory.source || "unknown")} · score: ${(memory.score || 0).toFixed(2)}</div></div>`).join("");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function esc(value) {
+  const div = document.createElement("div");
+  div.textContent = value;
+  return div.innerHTML;
+}
+
+init();
+</script>
+</body>
+</html>

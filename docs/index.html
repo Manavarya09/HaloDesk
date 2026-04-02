@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGI Desktop Agent — System Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060810;
+  --surface: #0d1117;
+  --card: #131922;
+  --border: #1e293b;
+  --border-hover: #334155;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-muted: #475569;
+  --green: #22c55e;
+  --green-glow: rgba(34,197,94,0.15);
+  --blue: #3b82f6;
+  --blue-glow: rgba(59,130,246,0.15);
+  --purple: #a855f7;
+  --purple-glow: rgba(168,85,247,0.15);
+  --amber: #f59e0b;
+  --amber-glow: rgba(245,158,11,0.15);
+  --pink: #ec4899;
+  --pink-glow: rgba(236,72,153,0.15);
+  --red: #ef4444;
+  --cyan: #06b6d4;
+  --cyan-glow: rgba(6,182,212,0.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+/* Header */
+.header { text-align: center; padding: 48px 24px 32px; position: relative; }
+.header::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 1px; background: linear-gradient(90deg, transparent, var(--green), transparent); }
+.header h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 8px; }
+.header h1 span { background: linear-gradient(135deg, var(--green), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.header p { color: var(--text-dim); font-size: 15px; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+/* Legend */
+.legend { display: flex; justify-content: center; gap: 24px; padding: 24px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Main diagram */
+.diagram { max-width: 1100px; margin: 0 auto; padding: 24px; position: relative; }
+
+/* Flow container */
+.flow { display: flex; flex-direction: column; gap: 32px; position: relative; }
+
+/* Rows */
+.flow-row { display: flex; justify-content: center; gap: 20px; position: relative; }
+
+/* Animated connecting lines */
+.connector { position: absolute; z-index: 0; }
+.connector-v { width: 2px; background: linear-gradient(180deg, var(--green) 0%, var(--blue) 100%); left: 50%; transform: translateX(-50%); }
+.connector-v::after {
+  content: ''; position: absolute; width: 6px; height: 6px;
+  background: var(--green); border-radius: 50%; left: -2px;
+  animation: flowDown 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--green);
+}
+@keyframes flowDown {
+  0% { top: -3px; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: calc(100% - 3px); opacity: 0; }
+}
+
+/* Nodes */
+.node {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px;
+  position: relative; z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer; min-width: 180px; text-align: center;
+}
+.node:hover { border-color: var(--border-hover); transform: translateY(-4px); }
+.node.active { border-color: var(--green); box-shadow: 0 0 30px var(--green-glow), 0 8px 32px rgba(0,0,0,0.4); }
+
+.node-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+.node-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; letter-spacing: -0.01em; }
+.node-sub { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+/* Color variants */
+.node.green { border-color: rgba(34,197,94,0.3); }
+.node.green:hover, .node.green.active { border-color: var(--green); box-shadow: 0 0 30px var(--green-glow); }
+.node.blue { border-color: rgba(59,130,246,0.3); }
+.node.blue:hover, .node.blue.active { border-color: var(--blue); box-shadow: 0 0 30px var(--blue-glow); }
+.node.purple { border-color: rgba(168,85,247,0.3); }
+.node.purple:hover, .node.purple.active { border-color: var(--purple); box-shadow: 0 0 30px var(--purple-glow); }
+.node.amber { border-color: rgba(245,158,11,0.3); }
+.node.amber:hover, .node.amber.active { border-color: var(--amber); box-shadow: 0 0 30px var(--amber-glow); }
+.node.pink { border-color: rgba(236,72,153,0.3); }
+.node.pink:hover, .node.pink.active { border-color: var(--pink); box-shadow: 0 0 30px var(--pink-glow); }
+.node.cyan { border-color: rgba(6,182,212,0.3); }
+.node.cyan:hover, .node.cyan.active { border-color: var(--cyan); box-shadow: 0 0 30px var(--cyan-glow); }
+
+/* Section labels */
+.section-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--text-muted); margin-bottom: 12px; text-align: center;
+  display: flex; align-items: center; gap: 12px; justify-content: center;
+}
+.section-label::before, .section-label::after {
+  content: ''; flex: 1; max-width: 80px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+/* Detail panel */
+.detail-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; margin-top: 32px;
+  display: none; animation: fadeIn 0.3s ease;
+}
+.detail-panel.visible { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.detail-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.detail-desc { color: var(--text-dim); font-size: 14px; line-height: 1.7; margin-bottom: 16px; }
+.detail-tech { display: flex; flex-wrap: wrap; gap: 8px; }
+.tech-tag { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
+
+/* Arrow indicators */
+.arrow-down {
+  text-align: center; font-size: 20px; color: var(--text-muted);
+  animation: bounce 2s ease-in-out infinite;
+  margin: -8px 0;
+}
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+/* Data flow animation */
+.flow-particle {
+  position: absolute; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 6px var(--green);
+  animation: particle 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes particle {
+  0% { opacity: 0; transform: translateY(0); }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(60px); }
+}
+
+/* Privacy shield animation */
+.shield-pulse {
+  display: inline-block;
+  animation: shieldPulse 2s ease-in-out infinite;
+}
+@keyframes shieldPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px var(--amber)); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 12px var(--amber)); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .flow-row { flex-direction: column; align-items: center; }
+  .node { width: 100%; max-width: 280px; }
+  .header h1 { font-size: 24px; }
+}
+
+/* Noise texture */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+  background-size: 256px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🤖 <span>AGI Desktop Agent</span></h1>
+  <p>Privacy-first desktop intelligence agent with local LLM, agentic web search, and multi-domain tool orchestration</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> User Layer</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Privacy</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Agent Core</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div> Tools</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div> Storage</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--pink)"></div> External API</div>
+</div>
+
+<div class="diagram">
+  <div class="flow">
+
+    <!-- Layer 1: User Input -->
+    <div>
+      <div class="section-label">User Layer</div>
+      <div class="flow-row">
+        <div class="node green" onclick="showDetail('ui')" id="node-ui">
+          <span class="node-icon">💬</span>
+          <div class="node-title">Web Chat UI</div>
+          <div class="node-sub">Natural language + attachments</div>
+        </div>
+        <div class="node green" onclick="showDetail('cli')" id="node-cli">
+          <span class="node-icon">⌨️</span>
+          <div class="node-title">CLI Interface</div>
+          <div class="node-sub">Terminal REPL</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <!-- Layer 2: Privacy -->
+    <div>
+      <div class="section-label">Privacy Layer</div>
+      <div class="flow-row">
+        <div class="node amber" onclick="showDetail('privacy')" id="node-privacy" style="min-width:400px">
+          <span class="node-icon"><span class="shield-pulse">🔒</span></span>
+          <div class="node-title">PII Redaction Engine</div>
+          <div class="node-sub">Presidio NLP / Regex Fallback — redacts names, emails, phones → &lt;PERSON_1&gt;</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <!-- Layer 3: Agent Core -->
+    <div>
+      <div class="section-label">Agent Core (Planner → Executor → Evaluator)</div>
+      <div class="flow-row">
+        <div class="node blue" onclick="showDetail('planner')" id="node-planner">
+          <span class="node-icon">🧠</span>
+          <div class="node-title">Planner</div>
+          <div class="node-sub">Goal decomposition</div>
+        </div>
+        <div class="node blue" onclick="showDetail('executor')" id="node-executor">
+          <span class="node-icon">⚡</span>
+          <div class="node-title">Executor</div>
+          <div class="node-sub">Tool calling + scheduling gate</div>
+        </div>
+        <div class="node blue" onclick="showDetail('evaluator')" id="node-evaluator">
+          <span class="node-icon">✅</span>
+          <div class="node-title">Evaluator</div>
+          <div class="node-sub">Success check + retry</div>
+        </div>
+        <div class="node blue" onclick="showDetail('synthesis')" id="node-synthesis">
+          <span class="node-icon">📝</span>
+          <div class="node-title">Synthesis</div>
+          <div class="node-sub">Final response + PII restore</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <!-- Layer 4: LLM -->
+    <div>
+      <div class="section-label">Local LLM</div>
+      <div class="flow-row">
+        <div class="node cyan" onclick="showDetail('llm')" id="node-llm" style="min-width:350px">
+          <span class="node-icon">🦙</span>
+          <div class="node-title">Ollama (llama3.1:8b)</div>
+          <div class="node-sub">Local inference — tool calling, planning, drafting — never sees raw PII</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <!-- Layer 5: Tools -->
+    <div>
+      <div class="section-label">Tool Layer (12 tools × 5 domains)</div>
+      <div class="flow-row" style="flex-wrap:wrap; max-width:900px; margin:0 auto">
+        <div class="node pink" onclick="showDetail('linkup')" id="node-linkup">
+          <span class="node-icon">🔍</span>
+          <div class="node-title">Linkup Search</div>
+          <div class="node-sub">Agentic web search API</div>
+        </div>
+        <div class="node purple" onclick="showDetail('email')" id="node-email">
+          <span class="node-icon">📧</span>
+          <div class="node-title">Email</div>
+          <div class="node-sub">list · read · draft (mailto:)</div>
+        </div>
+        <div class="node purple" onclick="showDetail('docs')" id="node-docs">
+          <span class="node-icon">📄</span>
+          <div class="node-title">Documents</div>
+          <div class="node-sub">PDF · DOCX · TXT · OCR</div>
+        </div>
+        <div class="node purple" onclick="showDetail('calendar')" id="node-calendar">
+          <span class="node-icon">📅</span>
+          <div class="node-title">Calendar</div>
+          <div class="node-sub">events · reminders · .ics</div>
+        </div>
+        <div class="node purple" onclick="showDetail('memory')" id="node-memory">
+          <span class="node-icon">🧠</span>
+          <div class="node-title">Memory</div>
+          <div class="node-sub">store · recall</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <!-- Layer 6: Storage -->
+    <div>
+      <div class="section-label">Local Storage</div>
+      <div class="flow-row">
+        <div class="node cyan" onclick="showDetail('sqlite')" id="node-sqlite">
+          <span class="node-icon">🗃️</span>
+          <div class="node-title">SQLite</div>
+          <div class="node-sub">Conversations · tasks · prefs</div>
+        </div>
+        <div class="node cyan" onclick="showDetail('faiss')" id="node-faiss">
+          <span class="node-icon">🔮</span>
+          <div class="node-title">FAISS</div>
+          <div class="node-sub">Semantic vector search</div>
+        </div>
+        <div class="node cyan" onclick="showDetail('files')" id="node-files">
+          <span class="node-icon">📁</span>
+          <div class="node-title">Local Files</div>
+          <div class="node-sub">.eml · .ics · uploads</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Detail Panel -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-title" id="detailTitle"></div>
+    <div class="detail-desc" id="detailDesc"></div>
+    <div class="detail-tech" id="detailTech"></div>
+  </div>
+</div>
+
+<script>
+const details = {
+  ui: {
+    icon: '💬', title: 'Web Chat Interface',
+    desc: 'Flask-served single-page app with real-time chat, file drag-and-drop, privacy toggle, AI View panel showing redacted input, and Generated Files section with download/mailto buttons. Sidebar with tool list and quick actions. Fully responsive.',
+    tech: ['HTML/CSS/JS', 'Flask', 'Vanilla JS', 'Drag & Drop API', 'mailto: protocol']
+  },
+  cli: {
+    icon: '⌨️', title: 'CLI Interface',
+    desc: 'Terminal-based REPL with /tools, /memory, /tasks commands. Supports single-shot mode (--once flag) for scripting and automation.',
+    tech: ['Python', 'argparse', 'rich']
+  },
+  privacy: {
+    icon: '🔒', title: 'PII Redaction Engine',
+    desc: 'Context-aware privacy layer that redacts personal identifiers (names, emails, phones, SSNs, credit cards) while preserving task-relevant entities (company names, dates, locations, roles). Uses Microsoft Presidio with spaCy NLP when available, falls back to intelligent regex patterns with role detection ("karthik my cfo" → &lt;PERSON_1&gt; my cfo). Cumulative session entity map restores real names in the final response and generated files.',
+    tech: ['Presidio', 'spaCy', 'Regex', 'Word Boundary Detection', 'Role Pattern Matching']
+  },
+  planner: {
+    icon: '🧠', title: 'Planner',
+    desc: 'Decomposes user goals into ordered steps using the LLM. Outputs a JSON array of step descriptions. Includes hard rules: no web_research unless explicitly needed, scheduling steps must check calendar first if no time is provided.',
+    tech: ['Ollama', 'JSON parsing', 'Few-shot prompting']
+  },
+  executor: {
+    icon: '⚡', title: 'Executor',
+    desc: 'Executes plan steps by sending the LLM conversation + tool definitions. Supports multi-round tool calling (up to 5 rounds per step). Includes a Scheduling Gate that physically blocks create_event/create_reminder unless the user\'s message contains a specific date/time. Restores PII in write-tool arguments so generated files (.eml, .ics) contain real names.',
+    tech: ['Ollama Tool Calling', 'Scheduling Gate', 'PII Restore', 'Multi-round Execution']
+  },
+  evaluator: {
+    icon: '✅', title: 'Evaluator',
+    desc: 'Checks step success using heuristics (error detection) and LLM evaluation for ambiguous cases. On failure with should_retry=true, the step is re-executed once with error context.',
+    tech: ['Heuristic Checks', 'LLM Evaluation', 'Retry Logic']
+  },
+  synthesis: {
+    icon: '📝', title: 'Synthesis + Integrity Check',
+    desc: 'Combines results from all steps into a final response. Includes an integrity check: if the response claims a meeting was scheduled but no .ics file exists, the false claim is stripped and replaced with actual free time suggestions from the calendar. PII is restored from the cumulative session entity map.',
+    tech: ['LLM Synthesis', 'Integrity Verification', 'PII Restoration', 'File Deduplication']
+  },
+  llm: {
+    icon: '🦙', title: 'Ollama — Local LLM',
+    desc: 'Runs entirely on the user\'s machine. Default model: llama3.1:8b (8GB RAM). Also supports qwen2.5:7b/14b for better tool calling. The LLM never sees raw PII — only redacted placeholders. Handles planning, tool selection, drafting, and evaluation.',
+    tech: ['Ollama', 'llama3.1:8b', 'qwen2.5:7b/14b', 'Tool/Function Calling']
+  },
+  linkup: {
+    icon: '🔍', title: 'Linkup Agentic Search (Main Track)',
+    desc: 'The only required external API. Provides real-time web knowledge for researching companies, fact-checking, gathering news, and meeting prep. Only sanitized non-PII queries are sent. Supports standard (fast) and deep (thorough) search modes. Agent decides when to call based on explicit rules — not on every prompt.',
+    tech: ['Linkup API', 'POST /v1/search', 'Rate Limiter', 'Query Formulation', 'Result Synthesis']
+  },
+  email: {
+    icon: '📧', title: 'Email Tools',
+    desc: 'list_emails, read_email, draft_reply. Draft produces a multipart MIME .eml with both plain text and HTML bodies. Opens in the user\'s mail app via mailto: link with To, Subject, and Body pre-filled. IMAP support for live inbox, local .eml demo mailbox for testing.',
+    tech: ['IMAP', 'email.mime', 'mailto: protocol', 'HTML email', 'MIME multipart']
+  },
+  docs: {
+    icon: '📄', title: 'Document Tools',
+    desc: 'read_document, list_documents, summarize_document. Supports PDF (PyMuPDF), DOCX (python-docx), TXT, and Markdown. Handles file attachments via drag-and-drop. Text extracted locally — never sent externally.',
+    tech: ['PyMuPDF', 'python-docx', 'Plain text', 'Drag & Drop']
+  },
+  calendar: {
+    icon: '📅', title: 'Calendar Tools',
+    desc: 'list_events, create_event, create_reminder. Zero-dependency ICS generation (no icalendar package needed). Pre-seeded demo events. list_events returns clearly labeled BUSY and FREE times. create_event only succeeds when a valid datetime is provided — enforced by the Scheduling Gate.',
+    tech: ['ICS format', 'Zero-dep generation', 'Scheduling Gate', 'Demo events', 'Time detection']
+  },
+  memory: {
+    icon: '🧠', title: 'Memory Tools',
+    desc: 'memory_store saves facts to both SQLite (keyword search) and FAISS (semantic search). memory_recall searches by similarity to resolve references like "that email" or "the contract". Cumulative across the session.',
+    tech: ['SQLite', 'FAISS', 'sentence-transformers', 'Semantic Search']
+  },
+  sqlite: {
+    icon: '🗃️', title: 'SQLite Database',
+    desc: 'Stores conversation history (messages by session), task logs (goal, steps, status, result), user preferences, and indexed facts with embedding references. All local — nothing leaves the machine.',
+    tech: ['SQLite3', 'Python stdlib']
+  },
+  faiss: {
+    icon: '🔮', title: 'FAISS Vector Index',
+    desc: 'Facebook AI Similarity Search for semantic memory retrieval. Embeddings generated by sentence-transformers (all-MiniLM-L6-v2, 384 dimensions). Enables finding relevant past context by meaning, not just keywords.',
+    tech: ['faiss-cpu', 'sentence-transformers', 'all-MiniLM-L6-v2', 'FlatIP index']
+  },
+  files: {
+    icon: '📁', title: 'Local File System',
+    desc: 'Generated .eml drafts in data/drafts/, .ics events in data/calendars/, user uploads in data/uploads/. All files tracked by the tool layer and surfaced as downloadable links in the chat UI.',
+    tech: ['data/drafts/', 'data/calendars/', 'data/uploads/', 'Generated Files UI']
+  },
+};
+
+let activeNode = null;
+
+function showDetail(key) {
+  const d = details[key];
+  if (!d) return;
+
+  // Toggle off if clicking same node
+  if (activeNode === key) {
+    document.getElementById('detailPanel').classList.remove('visible');
+    document.getElementById('node-' + key)?.classList.remove('active');
+    activeNode = null;
+    return;
+  }
+
+  // Deactivate previous
+  if (activeNode) document.getElementById('node-' + activeNode)?.classList.remove('active');
+
+  // Activate new
+  activeNode = key;
+  document.getElementById('node-' + key)?.classList.add('active');
+
+  document.getElementById('detailTitle').innerHTML = d.icon + ' ' + d.title;
+  document.getElementById('detailDesc').textContent = d.desc;
+  document.getElementById('detailTech').innerHTML = d.tech.map(t => `<span class="tech-tag">${t}</span>`).join('');
+
+  const panel = document.getElementById('detailPanel');
+  panel.classList.remove('visible');
+  void panel.offsetWidth; // force reflow for re-animation
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Auto-cycle through nodes on load for a demo effect
+let demoCycle = null;
+const demoOrder = ['ui', 'privacy', 'planner', 'executor', 'linkup', 'email', 'calendar', 'memory', 'sqlite'];
+let demoIdx = 0;
+
+function startDemo() {
+  demoCycle = setInterval(() => {
+    showDetail(demoOrder[demoIdx]);
+    demoIdx = (demoIdx + 1) % demoOrder.length;
+  }, 3000);
+}
+
+// Start auto-demo after 2 seconds, stop on any click
+setTimeout(startDemo, 2000);
+document.addEventListener('click', () => { if (demoCycle) { clearInterval(demoCycle); demoCycle = null; } });
+</script>
+</body>
+</html>
